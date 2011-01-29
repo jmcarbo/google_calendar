@@ -44,8 +44,8 @@ module Google
     #   a single event if only one found.
     #   an array of events if many found.
     #
-    def events
-      event_lookup()
+    def events(query='')
+      event_lookup(query)
     end
 
     # This is equivalnt to running a search in
@@ -59,7 +59,7 @@ module Google
     #   an array of events if many found.
     #
     def find_events(query)
-      event_lookup("?q=#{query}")
+      event_lookup(query)
     end
 
     # Attempts to find the event specified by the id
@@ -122,6 +122,12 @@ module Google
 
     def event_lookup(query_string = '') #:nodoc:
       begin
+        if(query_string.is_a? Hash)
+          query_string = "?" + query_string.to_a.map { |k| "#{k[0]}=#{k[1]}" }.flatten.join("&")
+        else
+          query_string = "?q=#{query_string}"
+        end
+
       response = @connection.send(Addressable::URI.parse(events_url + query_string), :get)
       events = Event.build_from_google_feed(response.body, self)
       events.length > 1 ? events : events[0]
